@@ -1,0 +1,9 @@
+<%- | Hash[String[1], Optional[Scalar]] $options | -%>
+X2GO_NXAGENT_DEFAULT_OPTIONS="<%= join($options.map |String[1] $option, Optional[Scalar] $value | {
+  if $value {
+    "${option} ${value}"
+  }
+  else {
+    $option
+  }
+}, ' ') %>"

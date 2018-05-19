@@ -1,0 +1,14 @@
+---
+x2go::server::agent_options:
+  # Workaround for https://bugs.launchpad.net/ubuntu/+source/libxfixes/+bug/985202
+  '-extension': 'XFIXES'
+  # Do not disable this unless you know what you are doing
+  '-nolisten': 'tcp'
+  # Do not expose the client clipboard to the server for safety
+  '-clipboard': 'server'
+  # Enable full system auditing
+  '-audit': 4
+
+x2go::server::config:
+  log:
+    loglevel: notice
