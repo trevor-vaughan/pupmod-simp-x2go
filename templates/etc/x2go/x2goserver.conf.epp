@@ -1,0 +1,8 @@
+<%- | Hash[String[1], Hash[String[1], NotUndef]] $config | -%>
+<% $config.each |String[1] $section, Hash[String[1], NotUndef] $options| { -%>
+[<%= $section %>]
+<%   $options.each |String[1] $key, NotUndef $value| { -%>
+<%= $key %>=<%= $value %>
+
+<%   } -%>
+<% } -%>
