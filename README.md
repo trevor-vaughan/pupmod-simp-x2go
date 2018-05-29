@@ -44,6 +44,8 @@ To install and configure the ``x2go`` server, set ``x2go::server`` to ``true`` i
 ``x2go`` requires a functioning window manager on the server to be useful and
 it does not perform well with compositing window managers, such as GNOME 3.
 
+See https://wiki.x2go.org/doku.php/doc:de-compat for additional information.
+
 It is recommended that you use the SIMP [gnome module](https://github.com/simp/pupmod-simp-gnome)
 and set ``enable_mate`` to use the MATE window manager (or GNOME 2 if MATE is
 not available).

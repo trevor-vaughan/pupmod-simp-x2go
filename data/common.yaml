@@ -1,4 +1,14 @@
 ---
+lookup_options:
+  x2go::server::agent_options:
+    merge:
+      strategy: deep
+      knockout_prefix: --
+  x2go::server::config:
+    merge:
+      strategy: deep
+      knockout_prefix: --
+
 x2go::server::agent_options:
   # Workaround for https://bugs.launchpad.net/ubuntu/+source/libxfixes/+bug/985202
   '-extension': 'XFIXES'

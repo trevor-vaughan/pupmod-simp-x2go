@@ -18,6 +18,7 @@ describe 'x2go with MATE' do
 
       it 'should be idempotent' do
         apply_manifest_on(host, manifest, :catch_changes => true)
+        on(host, 'rpm -qa > /tmp/newrpms')
       end
     end
   end

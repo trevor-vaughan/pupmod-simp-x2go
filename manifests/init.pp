@@ -20,6 +20,6 @@ class x2go (
   if $server {
     include 'x2go::server'
 
-    Class['x2go::install'] -> Class['x2go::server']
+    Class['x2go::install'] ~> Class['x2go::server']
   }
 }

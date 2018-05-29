@@ -18,6 +18,7 @@ describe 'x2go class' do
   hosts.each do |host|
     context "on #{host}" do
       it 'should work with no errors' do
+        on(host, 'rpm -qa > /tmp/rpms')
         apply_manifest_on(host, manifest, :catch_failures => true)
       end
 

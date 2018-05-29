@@ -86,6 +86,10 @@
 # @param agent_config_file
 #   The location of the agent configuration file
 #
+# @param session_service
+#   Enable the x2gocleansessions service to enable full accounting and resuming
+#   of sessions
+#
 # @author https://github.com/simp/pupmod-simp-x2go/graphs/contributors
 #
 class x2go::server (
@@ -93,6 +97,7 @@ class x2go::server (
   Hash[String[1], Optional[Scalar]]          $agent_options,
   Stdlib::AbsolutePath                       $config_file       = '/etc/x2go/x2goserver.conf',
   Stdlib::AbsolutePath                       $agent_config_file = '/etc/x2go/x2goagent.options',
+  Boolean                                    $session_service   = true
 ) {
   assert_private()
 
@@ -132,4 +137,6 @@ class x2go::server (
     mode    => '644',
     content => epp("$module_name/etc/x2go/x2goagent.options.epp", { options => $agent_options})
   }
+
+  contain 'x2go::server::clean_sessions'
 }

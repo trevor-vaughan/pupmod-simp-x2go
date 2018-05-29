@@ -24,9 +24,11 @@ describe 'x2go' do
           it_behaves_like "a structured module"
 
           it { is_expected.to contain_package('x2goserver') }
-          it { is_expected.to contain_class('x2go::server').that_requires('Class[x2go::install]') }
+          it { is_expected.to contain_class('x2go::install').that_notifies('Class[x2go::server]') }
           it { is_expected.to contain_file('/etc/x2go/x2goserver.conf').with_content(/\[log\]\nloglevel=notice/) }
           it { is_expected.to contain_file("/etc/x2go/x2goagent.options").that_requires('Class[x2go::install]') }
+
+          it { is_expected.to contain_service("x2gocleansessions") }
 
           it {
             is_expected.to contain_file("/etc/x2go/x2goagent.options").with_content(
