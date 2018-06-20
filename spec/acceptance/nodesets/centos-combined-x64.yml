@@ -4,6 +4,7 @@ HOSTS:
       - default
       - master
       - client
+      - mate_enabled
     platform:   el-7-x86_64
     box:        centos/7
     hypervisor: vagrant
