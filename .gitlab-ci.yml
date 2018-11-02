@@ -21,7 +21,7 @@ stages:
   - 'compliance'
   - 'deployment'
 
-image: 'ruby:2.1'
+image: 'ruby:2.4'
 
 variables:
   PUPPET_VERSION:    'UNDEFINED' # <- Matrixed jobs MUST override this (or fail)
@@ -64,37 +64,49 @@ variables:
     variables:
       - $SIMP_FULL_MATRIX
 
-# Puppet + testing environments
-# --------------------------------------
-.pup_prev: &pup_prev
+# Puppet Versions
+#-----------------------------------------------------------------------
+
+.pup_4: &pup_4
+  image: 'ruby:2.4'
+  variables:
+    PUPPET_VERSION: '~> 4.0'
+    MATRIX_RUBY_VERSION: '2.1'
+
+.pup_4_10: &pup_4_10
   image: 'ruby:2.1'
   variables:
     PUPPET_VERSION: '~> 4.10.4'
     MATRIX_RUBY_VERSION: '2.1'
 
-# PE 2018.1
-.pe_current: &pe_current
-  image: 'ruby:2.4'
-  variables:
-    PUPPET_VERSION: '5.5.6'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
-    MATRIX_RUBY_VERSION: '2.4'
-
-# Puppet for 6.3
-.pup_current: &pup_current
-  image: 'ruby:2.4'
-  variables:
-    PUPPET_VERSION: '5.5.7'
-    BEAKER_PUPPET_COLLECTION: 'puppet5'
-    MATRIX_RUBY_VERSION: '2.4'
-
-.pup_latest: &pup_latest
+.pup_5: &pup_5
   image: 'ruby:2.4'
   variables:
     PUPPET_VERSION: '~> 5.0'
     BEAKER_PUPPET_COLLECTION: 'puppet5'
     MATRIX_RUBY_VERSION: '2.4'
 
+# Puppet for SIMP 6.3, PE is at 5.5.6 but close enough
+.pup_5_5_7: &pup_5_5_7
+  image: 'ruby:2.4'
+  variables:
+    PUPPET_VERSION: '5.5.7'
+    BEAKER_PUPPET_COLLECTION: 'puppet5'
+    MATRIX_RUBY_VERSION: '2.4'
+
+# Experimental
+#^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.pup_6: &pup_6
+  allow_failure: true
+  image: 'ruby:2.4'
+  variables:
+    PUPPET_VERSION: '~> 6.0'
+    BEAKER_PUPPET_COLLECTION: 'puppet6'
+    MATRIX_RUBY_VERSION: '2.4'
+
+# Testing Environments
+#-----------------------------------------------------------------------
 
 .lint_tests: &lint_tests
   stage: 'validation'
@@ -103,6 +115,7 @@ variables:
   script:
     - 'bundle exec rake syntax'
     - 'bundle exec rake lint'
+    - 'bundle exec rake metadata_lint'
 
 .unit_tests: &unit_tests
   stage: 'validation'
@@ -111,12 +124,12 @@ variables:
   script:
     - 'bundle exec rake spec'
 
-.acceptance_base: &acceptance_base
+.acceptance_tests: &acceptance_tests
   stage: 'acceptance'
   tags: ['beaker']
   <<: *setup_bundler_env
 
-.compliance_base: &compliance_base
+.compliance_tests: &compliance_tests
   stage: 'compliance'
   tags: ['beaker']
   <<: *setup_bundler_env
@@ -126,83 +139,84 @@ variables:
 #=======================================================================
 
 sanity_checks:
-  <<: *pup_latest
+  <<: *pup_5
   <<: *setup_bundler_env
   stage: 'sanity'
   tags: ['docker']
   script:
+    - 'if `hash apt-get`; then apt-get update; fi'
+    - 'if `hash apt-get`; then apt-get install -y rpm; fi'
     - 'bundle exec rake check:dot_underscore'
     - 'bundle exec rake check:test_file'
     - 'bundle exec rake pkg:check_version'
     - 'bundle exec rake pkg:compare_latest_tag'
+    - 'bundle exec rake pkg:create_tag_changelog'
+    - 'bundle exec puppet module build'
 
+# Linting
+#-----------------------------------------------------------------------
 
-pup-prev-lint:
-  <<: *pup_prev
+pup4-lint:
+  <<: *pup_4_10
   <<: *lint_tests
 
-pup-current-lint:
-  <<: *pup_current
+pup5-lint:
+  <<: *pup_5
   <<: *lint_tests
 
-pup-latest-lint:
-  <<: *pup_latest
+pup6-lint:
+  <<: *pup_6
   <<: *lint_tests
 
+# Unit Tests
+#-----------------------------------------------------------------------
 
-pup-prev-unit:
-  <<: *pup_prev
+pup4.10-unit:
+  <<: *pup_4_10
   <<: *unit_tests
 
-pe-current-unit:
-  <<: *pe_current
+pup5-unit:
+  <<: *pup_5
   <<: *unit_tests
 
-pup-current-unit:
-  <<: *pup_current
+pup5.5.7-unit:
+  <<: *pup_5_5_7
   <<: *unit_tests
 
-pup-latest-unit:
-  <<: *pup_latest
+pup6-unit:
+  <<: *pup_6
   <<: *unit_tests
 
+# Acceptance Tests
+#-----------------------------------------------------------------------
 
-pup-prev-default:
-  <<: *pup_prev
-  <<: *acceptance_base
+pup4.10:
+  <<: *pup_4_10
+  <<: *acceptance_tests
   script:
     - 'bundle exec rake beaker:suites'
 
-pup-prev-fips-default:
-  <<: *pup_prev
-  <<: *acceptance_base
+pup4.10-fips:
+  <<: *pup_4_10
+  <<: *acceptance_tests
   <<: *only_with_SIMP_FULL_MATRIX
   script:
     - 'BEAKER_fips=yes bundle exec rake beaker:suites'
 
-pup-current-default:
-  <<: *pup_current
-  <<: *acceptance_base
+pup5.5.7:
+  <<: *pup_5_5_7
+  <<: *acceptance_tests
   script:
     - 'bundle exec rake beaker:suites'
 
-pup-current-fips-default:
-  <<: *pup_current
-  <<: *acceptance_base
+pup5.5.7-fips:
+  <<: *pup_5_5_7
+  <<: *acceptance_tests
   script:
     - 'BEAKER_fips=yes bundle exec rake beaker:suites'
 
-pup-current-oel-default:
-  <<: *pup_current
-  <<: *acceptance_base
+pup5.5.7-oel:
+  <<: *pup_5_5_7
+  <<: *acceptance_tests
   script:
     - 'bundle exec rake beaker:suites[default,oel-combined-x64]'
-
-pup-current-oel-fips-default:
-  <<: *pup_current
-  <<: *acceptance_base
-  <<: *only_with_SIMP_FULL_MATRIX
-  script:
-    - 'BEAKER_fips=yes bundle exec rake beaker:suites[default,oel-combined-x64]'
-
-# vi:tabstop=2:shiftwidth=2:expandtab
